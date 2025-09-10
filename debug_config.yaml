@@ -1,0 +1,11 @@
+splunk:
+  host: "localhost"
+  port: 8089
+  username: "admin"
+  password: "test1234"
+  protocol: "https"  # http or https
+  verify_ssl: false
+
+settings:
+  log_level: "DEBUG"  # DEBUG, INFO, WARNING, ERROR
+  dry_run: false
