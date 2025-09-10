@@ -1,0 +1,162 @@
+[
+  {
+    "time": 1757442057.831391,
+    "host": "csv-converter",
+    "source": "sample_data.csv",
+    "sourcetype": "csv_data",
+    "index": "testdata",
+    "event": {
+      "timestamp": "2024-01-15 10:30:45",
+      "user_id": "user123",
+      "action": "login",
+      "ip_address": "192.168.1.100",
+      "status_code": "200",
+      "response_time": "0.245",
+      "bytes_transferred": "1024"
+    }
+  },
+  {
+    "time": 1757442057.831391,
+    "host": "csv-converter",
+    "source": "sample_data.csv",
+    "sourcetype": "csv_data",
+    "index": "testdata",
+    "event": {
+      "timestamp": "2024-01-15 10:31:12",
+      "user_id": "user456",
+      "action": "view_page",
+      "ip_address": "10.0.0.50",
+      "status_code": "200",
+      "response_time": "0.189",
+      "bytes_transferred": "2048"
+    }
+  },
+  {
+    "time": 1757442057.831391,
+    "host": "csv-converter",
+    "source": "sample_data.csv",
+    "sourcetype": "csv_data",
+    "index": "testdata",
+    "event": {
+      "timestamp": "2024-01-15 10:31:38",
+      "user_id": "user789",
+      "action": "download",
+      "ip_address": "172.16.0.25",
+      "status_code": "200",
+      "response_time": "1.234",
+      "bytes_transferred": "5120"
+    }
+  },
+  {
+    "time": 1757442057.831391,
+    "host": "csv-converter",
+    "source": "sample_data.csv",
+    "sourcetype": "csv_data",
+    "index": "testdata",
+    "event": {
+      "timestamp": "2024-01-15 10:32:05",
+      "user_id": "user123",
+      "action": "logout",
+      "ip_address": "192.168.1.100",
+      "status_code": "200",
+      "response_time": "0.156",
+      "bytes_transferred": "512"
+    }
+  },
+  {
+    "time": 1757442057.831391,
+    "host": "csv-converter",
+    "source": "sample_data.csv",
+    "sourcetype": "csv_data",
+    "index": "testdata",
+    "event": {
+      "timestamp": "2024-01-15 10:32:22",
+      "user_id": "user999",
+      "action": "login",
+      "ip_address": "203.0.113.45",
+      "status_code": "401",
+      "response_time": "0.078",
+      "bytes_transferred": "256"
+    }
+  },
+  {
+    "time": 1757442057.831391,
+    "host": "csv-converter",
+    "source": "sample_data.csv",
+    "sourcetype": "csv_data",
+    "index": "testdata",
+    "event": {
+      "timestamp": "2024-01-15 10:32:44",
+      "user_id": "user456",
+      "action": "upload",
+      "ip_address": "10.0.0.50",
+      "status_code": "201",
+      "response_time": "2.567",
+      "bytes_transferred": "10240"
+    }
+  },
+  {
+    "time": 1757442057.831391,
+    "host": "csv-converter",
+    "source": "sample_data.csv",
+    "sourcetype": "csv_data",
+    "index": "testdata",
+    "event": {
+      "timestamp": "2024-01-15 10:33:11",
+      "user_id": "user789",
+      "action": "view_profile",
+      "ip_address": "172.16.0.25",
+      "status_code": "200",
+      "response_time": "0.334",
+      "bytes_transferred": "1536"
+    }
+  },
+  {
+    "time": 1757442057.831391,
+    "host": "csv-converter",
+    "source": "sample_data.csv",
+    "sourcetype": "csv_data",
+    "index": "testdata",
+    "event": {
+      "timestamp": "2024-01-15 10:33:29",
+      "user_id": "user999",
+      "action": "login",
+      "ip_address": "203.0.113.45",
+      "status_code": "200",
+      "response_time": "0.123",
+      "bytes_transferred": "1024"
+    }
+  },
+  {
+    "time": 1757442057.831391,
+    "host": "csv-converter",
+    "source": "sample_data.csv",
+    "sourcetype": "csv_data",
+    "index": "testdata",
+    "event": {
+      "timestamp": "2024-01-15 10:33:55",
+      "user_id": "user111",
+      "action": "register",
+      "ip_address": "198.51.100.10",
+      "status_code": "201",
+      "response_time": "0.445",
+      "bytes_transferred": "768"
+    }
+  },
+  {
+    "time": 1757442057.831391,
+    "host": "csv-converter",
+    "source": "sample_data.csv",
+    "sourcetype": "csv_data",
+    "index": "testdata",
+    "event": {
+      "timestamp": "2024-01-15 10:34:18",
+      "user_id": "user222",
+      "action": "search",
+      "ip_address": "192.0.2.30",
+      "status_code": "200",
+      "response_time": "0.678",
+      "bytes_transferred": "2560"
+    }
+  }
+]
