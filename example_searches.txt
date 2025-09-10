@@ -1,5 +1,0 @@
-search_name_1
-search_name_2
-disabled_search_example
-test_search_disabled
-old_unused_search
