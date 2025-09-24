@@ -28,12 +28,16 @@ class SplunkSearchManager:
         self.user_base_url = f"{self.protocol}://{self.splunk_host}:{self.port}/servicesNS/{self.username}/-"
         self.auth = HTTPBasicAuth(self.username, self.password)
         
-    def get_saved_search(self, search_name):
+    def get_saved_search(self, search_name, specified_app=None):
         """Get details of a specific saved search"""
         encoded_name = quote(search_name, safe='')
-        # Try different namespace combinations
-        apps_to_try = ['search', 'system', '-']  # Common apps where searches might be stored
-        
+
+        # If app is specified, try it first, then fallback to common apps
+        if specified_app:
+            apps_to_try = [specified_app, 'search', 'system', '-']
+        else:
+            apps_to_try = ['search', 'system', '-']  # Common apps where searches might be stored
+
         for app in apps_to_try:
             for user in [self.username, 'nobody', '-']:
                 url = f"{self.protocol}://{self.splunk_host}:{self.port}/servicesNS/{user}/{app}/saved/searches/{encoded_name}"
@@ -47,7 +51,7 @@ class SplunkSearchManager:
                 except requests.exceptions.RequestException as e:
                     logger.debug(f"Request error for {url}: {e}")
                     continue
-        
+
         logger.warning(f"Saved search '{search_name}' not found in any namespace")
         return None, None, None, None
     
@@ -62,18 +66,23 @@ class SplunkSearchManager:
         """Delete a saved search using specific user and app context"""
         encoded_name = quote(search_name, safe='')
 
-        # For private searches or global namespace, try multiple combinations
-        if user == '-' or app == '-':
+        # If we have specific user and app, try that first
+        if user != '-' and app != '-':
             deletion_attempts = [
+                (user, app),                 # Try the exact namespace where it was found
+                (self.username, app),        # Try current user with same app
+                ('nobody', app)              # Try nobody user with same app
+            ]
+        else:
+            # For global namespace searches, try multiple combinations
+            deletion_attempts = [
+                (self.username, app if app != '-' else 'search'),  # Try current user with actual app
+                ('nobody', app if app != '-' else 'search'),       # Try nobody user with actual app
                 (self.username, 'search'),   # Try current user with search app
                 ('nobody', 'search'),        # Try nobody user with search app
                 (self.username, 'system'),   # Try current user with system app
-                ('nobody', 'system'),        # Try nobody user with system app
-                (self.username, app if app != '-' else 'search'),  # Try current user with actual app
-                ('nobody', app if app != '-' else 'search')        # Try nobody user with actual app
+                ('nobody', 'system')         # Try nobody user with system app
             ]
-        else:
-            deletion_attempts = [(user, app)]
         
         for del_user, del_app in deletion_attempts:
             url = f"{self.protocol}://{self.splunk_host}:{self.port}/servicesNS/{del_user}/{del_app}/saved/searches/{encoded_name}"
@@ -116,37 +125,58 @@ class SplunkSearchManager:
         if not self.test_connection():
             logger.error("Unable to connect to Splunk server. Please check your configuration.")
             return
-        
+
         try:
             with open(file_path, 'r') as f:
-                search_names = [line.strip() for line in f if line.strip()]
+                lines = [line.strip() for line in f if line.strip()]
         except FileNotFoundError:
             logger.error(f"File not found: {file_path}")
             return
         except Exception as e:
             logger.error(f"Error reading file {file_path}: {e}")
             return
-        
-        if not search_names:
+
+        # Parse lines to extract search name and optional app name
+        searches_to_process = []
+        for line in lines:
+            if ',' in line:
+                # Format: search_name,app_name
+                parts = [p.strip() for p in line.split(',', 1)]
+                if len(parts) == 2:
+                    searches_to_process.append((parts[0], parts[1]))
+                else:
+                    searches_to_process.append((parts[0], None))
+            elif ' ' in line and not line.startswith(' '):
+                # Format: search_name app_name (space-separated)
+                parts = line.split(' ', 1)
+                searches_to_process.append((parts[0].strip(), parts[1].strip()))
+            else:
+                # Format: search_name only
+                searches_to_process.append((line, None))
+
+        if not searches_to_process:
             logger.warning("No saved search names found in the file")
             return
-        
-        logger.info(f"Found {len(search_names)} saved searches to process")
+
+        logger.info(f"Found {len(searches_to_process)} saved searches to process")
         
         deleted_count = 0
         skipped_count = 0
         not_found_count = 0
         error_count = 0
-        
-        for search_name in search_names:
-            logger.info(f"Processing: {search_name}")
-            
+
+        for search_name, specified_app in searches_to_process:
+            if specified_app:
+                logger.info(f"Processing: {search_name} (app: {specified_app})")
+            else:
+                logger.info(f"Processing: {search_name}")
+
             # Check if search exists and is disabled
-            search_details, search_url, user, app = self.get_saved_search(search_name)
+            search_details, search_url, user, app = self.get_saved_search(search_name, specified_app)
             if search_details is None:
                 not_found_count += 1
                 continue
-            
+
             if self.is_search_disabled(search_details):
                 if dry_run:
                     logger.info(f"[DRY RUN] Would delete disabled saved search: {search_name} (user={user}, app={app})")
