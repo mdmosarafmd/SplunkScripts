@@ -61,14 +61,16 @@ class SplunkSearchManager:
     def delete_saved_search(self, search_name, user, app):
         """Delete a saved search using specific user and app context"""
         encoded_name = quote(search_name, safe='')
-        
+
         # For private searches or global namespace, try multiple combinations
-        if user == '-':
+        if user == '-' or app == '-':
             deletion_attempts = [
-                (self.username, app),     # Try current user
-                ('nobody', app),          # Try nobody user  
-                (self.username, 'search'), # Try current user with search app
-                ('-', app)                # Try original global namespace
+                (self.username, 'search'),   # Try current user with search app
+                ('nobody', 'search'),        # Try nobody user with search app
+                (self.username, 'system'),   # Try current user with system app
+                ('nobody', 'system'),        # Try nobody user with system app
+                (self.username, app if app != '-' else 'search'),  # Try current user with actual app
+                ('nobody', app if app != '-' else 'search')        # Try nobody user with actual app
             ]
         else:
             deletion_attempts = [(user, app)]
