@@ -28,7 +28,7 @@ class SplunkSearchManager:
         self.user_base_url = f"{self.protocol}://{self.splunk_host}:{self.port}/servicesNS/{self.username}/-"
         self.auth = HTTPBasicAuth(self.username, self.password)
         
-    def get_saved_search(self, search_name, specified_app=None):
+    def get_saved_search(self, search_name, specified_app=None, specified_owner=None):
         """Get details of a specific saved search"""
         encoded_name = quote(search_name, safe='')
 
@@ -38,8 +38,14 @@ class SplunkSearchManager:
         else:
             apps_to_try = ['search', 'system', '-']  # Common apps where searches might be stored
 
+        # If owner is specified, try it first, then fallback to common users
+        if specified_owner:
+            users_to_try = [specified_owner, self.username, 'nobody', '-']
+        else:
+            users_to_try = [self.username, 'nobody', '-']
+
         for app in apps_to_try:
-            for user in [self.username, 'nobody', '-']:
+            for user in users_to_try:
                 url = f"{self.protocol}://{self.splunk_host}:{self.port}/servicesNS/{user}/{app}/saved/searches/{encoded_name}"
                 try:
                     response = requests.get(url, auth=self.auth, verify=self.verify_ssl)
@@ -136,23 +142,33 @@ class SplunkSearchManager:
             logger.error(f"Error reading file {file_path}: {e}")
             return
 
-        # Parse lines to extract search name and optional app name
+        # Parse lines to extract search name, optional app name, and optional owner name
         searches_to_process = []
         for line in lines:
+            if line.startswith('#'):
+                continue  # Skip comment lines
+
             if ',' in line:
-                # Format: search_name,app_name
-                parts = [p.strip() for p in line.split(',', 1)]
-                if len(parts) == 2:
-                    searches_to_process.append((parts[0], parts[1]))
+                # Format: search_name,app_name or search_name,app_name,owner_name
+                parts = [p.strip() for p in line.split(',')]
+                if len(parts) >= 3:
+                    searches_to_process.append((parts[0], parts[1], parts[2]))
+                elif len(parts) == 2:
+                    searches_to_process.append((parts[0], parts[1], None))
                 else:
-                    searches_to_process.append((parts[0], None))
+                    searches_to_process.append((parts[0], None, None))
             elif ' ' in line and not line.startswith(' '):
-                # Format: search_name app_name (space-separated)
-                parts = line.split(' ', 1)
-                searches_to_process.append((parts[0].strip(), parts[1].strip()))
+                # Format: search_name app_name owner_name (space-separated)
+                parts = line.split()
+                if len(parts) >= 3:
+                    searches_to_process.append((parts[0], parts[1], parts[2]))
+                elif len(parts) == 2:
+                    searches_to_process.append((parts[0], parts[1], None))
+                else:
+                    searches_to_process.append((parts[0], None, None))
             else:
                 # Format: search_name only
-                searches_to_process.append((line, None))
+                searches_to_process.append((line, None, None))
 
         if not searches_to_process:
             logger.warning("No saved search names found in the file")
@@ -165,14 +181,18 @@ class SplunkSearchManager:
         not_found_count = 0
         error_count = 0
 
-        for search_name, specified_app in searches_to_process:
-            if specified_app:
+        for search_name, specified_app, specified_owner in searches_to_process:
+            if specified_app and specified_owner:
+                logger.info(f"Processing: {search_name} (app: {specified_app}, owner: {specified_owner})")
+            elif specified_app:
                 logger.info(f"Processing: {search_name} (app: {specified_app})")
+            elif specified_owner:
+                logger.info(f"Processing: {search_name} (owner: {specified_owner})")
             else:
                 logger.info(f"Processing: {search_name}")
 
             # Check if search exists and is disabled
-            search_details, search_url, user, app = self.get_saved_search(search_name, specified_app)
+            search_details, search_url, user, app = self.get_saved_search(search_name, specified_app, specified_owner)
             if search_details is None:
                 not_found_count += 1
                 continue
